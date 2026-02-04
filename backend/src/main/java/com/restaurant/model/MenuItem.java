@@ -34,6 +34,9 @@ public class MenuItem {
     @NotNull
     private Boolean available = true;
 
+    @NotNull
+    private Boolean isVeg = true;
+
     public MenuItem() {
     }
 
@@ -98,5 +101,13 @@ public class MenuItem {
 
     public void setAvailable(Boolean available) {
         this.available = available;
+    }
+
+    public Boolean getIsVeg() {
+        return isVeg;
+    }
+
+    public void setIsVeg(Boolean isVeg) {
+        this.isVeg = isVeg;
     }
 }

@@ -43,7 +43,8 @@ public class MenuItemController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id, @Valid @RequestBody MenuItem menuItemDetails) {
+    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable Long id,
+            @Valid @RequestBody MenuItem menuItemDetails) {
         return menuItemRepository.findById(id)
                 .map(menuItem -> {
                     menuItem.setName(menuItemDetails.getName());
@@ -52,6 +53,7 @@ public class MenuItemController {
                     menuItem.setCategory(menuItemDetails.getCategory());
                     menuItem.setImageUrl(menuItemDetails.getImageUrl());
                     menuItem.setAvailable(menuItemDetails.getAvailable());
+                    menuItem.setIsVeg(menuItemDetails.getIsVeg());
                     return ResponseEntity.ok(menuItemRepository.save(menuItem));
                 })
                 .orElse(ResponseEntity.notFound().build());
