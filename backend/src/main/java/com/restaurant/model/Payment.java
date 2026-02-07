@@ -39,15 +39,19 @@ public class Payment {
     @Size(max = 500)
     private String stripePaymentIntentId;
 
+    @Size(max = 100)
+    private String razorpayOrderId;
+
     public enum PaymentStatus {
         PENDING, COMPLETED, FAILED, REFUNDED
     }
 
     public enum PaymentMethod {
-        CREDIT_CARD, DEBIT_CARD, PAYPAL, STRIPE, CASH_ON_DELIVERY
+        CREDIT_CARD, DEBIT_CARD, PAYPAL, STRIPE, RAZORPAY, CASH_ON_DELIVERY
     }
 
-    public Payment() {}
+    public Payment() {
+    }
 
     public Payment(Order order, BigDecimal amount, PaymentMethod paymentMethod) {
         this.order = order;
@@ -55,27 +59,75 @@ public class Payment {
         this.paymentMethod = paymentMethod;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Order getOrder() { return order; }
-    public void setOrder(Order order) { this.order = order; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
+    public Order getOrder() {
+        return order;
+    }
 
-    public PaymentStatus getStatus() { return status; }
-    public void setStatus(PaymentStatus status) { this.status = status; }
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 
-    public PaymentMethod getPaymentMethod() { return paymentMethod; }
-    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+    public BigDecimal getAmount() {
+        return amount;
+    }
 
-    public String getTransactionId() { return transactionId; }
-    public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
 
-    public LocalDateTime getPaymentDate() { return paymentDate; }
-    public void setPaymentDate(LocalDateTime paymentDate) { this.paymentDate = paymentDate; }
+    public PaymentStatus getStatus() {
+        return status;
+    }
 
-    public String getStripePaymentIntentId() { return stripePaymentIntentId; }
-    public void setStripePaymentIntentId(String stripePaymentIntentId) { this.stripePaymentIntentId = stripePaymentIntentId; }
+    public void setStatus(PaymentStatus status) {
+        this.status = status;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    public String getRazorpayOrderId() {
+        return razorpayOrderId;
+    }
+
+    public void setRazorpayOrderId(String razorpayOrderId) {
+        this.razorpayOrderId = razorpayOrderId;
+    }
 }

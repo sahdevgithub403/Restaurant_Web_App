@@ -1,25 +1,21 @@
 package com.restaurant.controller;
 
-import com.restaurant.dto.PaymentRequest;
 import com.restaurant.model.Order;
 import com.restaurant.model.Payment;
+import com.restaurant.model.User;
 import com.restaurant.repository.OrderRepository;
 import com.restaurant.repository.PaymentRepository;
-import com.restaurant.service.StripeService;
-import com.stripe.exception.StripeException;
+import com.restaurant.repository.UserRepository;
+import com.restaurant.service.RazorpayService;
+import com.razorpay.RazorpayException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.restaurant.model.User;
-import com.restaurant.repository.UserRepository;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.ArrayList;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -27,7 +23,7 @@ import java.util.ArrayList;
 public class PaymentController {
 
     @Autowired
-    private StripeService stripeService;
+    private RazorpayService razorpayService;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -38,28 +34,36 @@ public class PaymentController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/create-payment-intent")
-    public ResponseEntity<?> createPaymentIntent(@RequestBody Map<String, Object> request) {
+    @PostMapping("/create-order")
+    public ResponseEntity<?> createOrder(@RequestBody Map<String, Object> request) {
         try {
             Long amount = Long.valueOf(request.get("amount").toString());
             String currency = request.get("currency").toString();
 
-            Map<String, String> paymentIntent = stripeService.createPaymentIntent(amount, currency);
-            return ResponseEntity.ok(paymentIntent);
-        } catch (StripeException e) {
-            return ResponseEntity.badRequest().body("Error creating payment intent: " + e.getMessage());
+            Map<String, String> razorpayOrder = razorpayService.createOrder(amount, currency);
+            return ResponseEntity.ok(razorpayOrder);
+        } catch (RazorpayException e) {
+            return ResponseEntity.badRequest().body("Error creating Razorpay order: " + e.getMessage());
         }
     }
 
-    @PostMapping("/confirm")
-    public ResponseEntity<?> confirmPayment(@RequestBody Map<String, Object> request, Authentication authentication) {
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyPayment(@RequestBody Map<String, Object> request, Authentication authentication) {
         try {
-            String paymentIntentId = request.get("paymentIntentId").toString();
+            String razorpayOrderId = (String) request.get("razorpay_order_id");
+            String razorpayPaymentId = (String) request.get("razorpay_payment_id");
+            String razorpaySignature = (String) request.get("razorpay_signature");
             Map<String, Object> orderData = (Map<String, Object>) request.get("orderData");
+
+            boolean isValid = razorpayService.verifyPaymentSignature(razorpayOrderId, razorpayPaymentId,
+                    razorpaySignature);
+
+            if (!isValid) {
+                return ResponseEntity.badRequest().body("Invalid payment signature");
+            }
 
             // Create order
             Order order = new Order();
-
             if (orderData.containsKey("deliveryAddress")) {
                 order.setDeliveryAddress((String) orderData.get("deliveryAddress"));
             }
@@ -88,9 +92,9 @@ public class PaymentController {
             payment.setOrder(savedOrder);
             payment.setAmount(savedOrder.getTotalAmount());
             payment.setStatus(Payment.PaymentStatus.COMPLETED);
-            payment.setPaymentMethod(Payment.PaymentMethod.STRIPE);
-            payment.setStripePaymentIntentId(paymentIntentId);
-            payment.setTransactionId(paymentIntentId);
+            payment.setPaymentMethod(Payment.PaymentMethod.RAZORPAY);
+            payment.setTransactionId(razorpayPaymentId);
+            payment.setRazorpayOrderId(razorpayOrderId);
 
             paymentRepository.save(payment);
 
@@ -100,7 +104,7 @@ public class PaymentController {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error confirming payment: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error verifying payment: " + e.getMessage());
         }
     }
 }
