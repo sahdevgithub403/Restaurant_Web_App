@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Syne:wght@400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-cream-bg: #FDFBF7;
+  --color-navy-text: #1a1a1a;
+  --color-orange-accent: #E56E0C;
+  --font-display: "Syne", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-cream-bg);
+  color: var(--color-navy-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-float-smoothing: grayscale;
+}
+
+/* SMOOTHER ANIMATIONS */
+@keyframes slideUpSimple {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInSimple {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up { 
+  animation: slideUpSimple 0.6s ease-out forwards; 
+}
+
+.animate-scale-in { 
+  animation: fadeInSimple 0.5s ease-out forwards; 
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+
+.hover-lift { 
+  transition: transform 0.2s ease, box-shadow 0.2s ease; 
+}
+.hover-lift:hover { 
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+}

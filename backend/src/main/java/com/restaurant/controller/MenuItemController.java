@@ -19,8 +19,8 @@ public class MenuItemController {
     private MenuItemRepository menuItemRepository;
 
     @GetMapping
-    public List<MenuItem> getAllAvailableMenuItems() {
-        return menuItemRepository.findByAvailableTrue();
+    public List<MenuItem> getAllMenuItems() {
+        return menuItemRepository.findAll();
     }
 
     @GetMapping("/{id}")
@@ -32,7 +32,7 @@ public class MenuItemController {
 
     @GetMapping("/category/{category}")
     public List<MenuItem> getMenuItemsByCategory(@PathVariable String category) {
-        return menuItemRepository.findByCategoryAndAvailableTrue(category);
+        return menuItemRepository.findByCategory(category);
     }
 
     @PostMapping
