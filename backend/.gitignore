@@ -1,0 +1,24 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Environment variables - IMPORTANT: Never commit .env files!
+.env
+.env.local
+*.env
+src/main/resources/.env
+
+# Spring Boot
+*.log
+/logs
+
+# OS
+.DS_Store

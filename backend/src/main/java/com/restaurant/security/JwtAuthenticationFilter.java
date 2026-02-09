@@ -35,10 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // Allow filter to proceed (it will just not find a token if not present)
 
         try {
             String jwt = getJwtFromRequest(request);
