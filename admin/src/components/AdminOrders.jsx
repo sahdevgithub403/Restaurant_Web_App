@@ -32,11 +32,11 @@ const AdminOrders = () => {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'PENDING': return 'bg-orange-50 text-orange-600 border-orange-100';
-            case 'CONFIRMED': return 'bg-blue-50 text-blue-600 border-blue-100';
-            case 'SHIPPED': return 'bg-purple-50 text-purple-600 border-purple-100';
-            case 'DELIVERED': return 'bg-green-50 text-green-600 border-green-100';
-            case 'CANCELLED': return 'bg-red-50 text-red-600 border-red-100';
+            case 'PENDING': return 'bg-[#E56E0C]/10 text-[#E56E0C] border-[#E56E0C]/20';
+            case 'CONFIRMED': return 'bg-stone-100 text-[#1a1a1a] border-stone-200';
+            case 'SHIPPED': return 'bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/20';
+            case 'DELIVERED': return 'bg-green-50 text-green-700 border-green-200';
+            case 'CANCELLED': return 'bg-red-50 text-red-800 border-red-200';
             default: return 'bg-stone-50 text-stone-600 border-stone-100';
         }
     };

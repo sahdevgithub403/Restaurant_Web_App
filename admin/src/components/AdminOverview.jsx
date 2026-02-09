@@ -21,10 +21,10 @@ const AdminOverview = () => {
     }, []);
 
     const statCards = [
-        { label: 'Total Revenue', value: stats?.totalRevenue ? `₹${stats.totalRevenue}` : '₹0', icon: <DollarSign size={24} />, color: 'bg-green-50 text-green-600', trend: '+12.5%' },
-        { label: 'Today\'s Orders', value: stats?.totalOrders || '0', icon: <ShoppingBag size={24} />, color: 'bg-[#ff9f0d]/10 text-[#ff9f0d]', trend: '+8%' },
-        { label: 'Active Dishes', value: stats?.totalMenuItems || '0', icon: <ChefHat size={24} />, color: 'bg-blue-50 text-blue-600', trend: 'Steady' },
-        { label: 'Dining Community', value: stats?.totalUsers || '0', icon: <Users size={24} />, color: 'bg-purple-50 text-purple-600', trend: '+18%' },
+        { label: 'Total Revenue', value: stats?.totalRevenue ? `₹${stats.totalRevenue}` : '₹0', icon: <DollarSign size={24} />, color: 'bg-[#1a1a1a] text-white', trend: '+12.5%' },
+        { label: 'Today\'s Orders', value: stats?.totalOrders || '0', icon: <ShoppingBag size={24} />, color: 'bg-[#E56E0C]/10 text-[#E56E0C]', trend: '+8%' },
+        { label: 'Active Dishes', value: stats?.totalMenuItems || '0', icon: <ChefHat size={24} />, color: 'bg-[#D4AF37]/10 text-[#D4AF37]', trend: 'Steady' },
+        { label: 'Dining Community', value: stats?.totalUsers || '0', icon: <Users size={24} />, color: 'bg-stone-100 text-[#1a1a1a]', trend: '+18%' },
     ];
 
     if (loading) return (

@@ -27,4 +27,13 @@ public class PaymentService {
         Order order = razorpay.orders.create(orderRequest);
         return order.toString();
     }
+
+    public boolean verifyPayment(String orderId, String paymentId, String signature) throws RazorpayException {
+        JSONObject options = new JSONObject();
+        options.put("razorpay_order_id", orderId);
+        options.put("razorpay_payment_id", paymentId);
+        options.put("razorpay_signature", signature);
+
+        return com.razorpay.Utils.verifyPaymentSignature(options, keySecret);
+    }
 }

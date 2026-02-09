@@ -41,8 +41,9 @@ public class OrderController {
     public ResponseEntity<Order> getOrderById(@PathVariable Long id, Authentication authentication) {
         return orderRepository.findById(id)
                 .map(order -> {
-                    if (order.getUser().getUsername().equals(authentication.getName()) || 
-                        authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                    if (order.getUser().getUsername().equals(authentication.getName()) ||
+                            authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
                         return ResponseEntity.ok(order);
                     }
                     return ResponseEntity.status(403).<Order>build();
@@ -55,6 +56,13 @@ public class OrderController {
         User user = userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         order.setUser(user);
+
+        if (order.getOrderItems() != null) {
+            for (com.restaurant.model.OrderItem item : order.getOrderItems()) {
+                item.setOrder(order);
+            }
+        }
+
         return orderRepository.save(order);
     }
 

@@ -26,4 +26,25 @@ public class PaymentController {
                     .body("Error creating Razorpay order: " + e.getMessage());
         }
     }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyPayment(
+            @RequestBody com.restaurant.dto.PaymentVerificationRequest verificationRequest) {
+        try {
+            boolean isValid = paymentService.verifyPayment(
+                    verificationRequest.getRazorpayOrderId(),
+                    verificationRequest.getRazorpayPaymentId(),
+                    verificationRequest.getRazorpaySignature());
+
+            if (isValid) {
+                return ResponseEntity.ok().body("{\"status\": \"success\"}");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("{\"status\": \"failure\", \"message\": \"Invalid signature\"}");
+            }
+        } catch (RazorpayException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error verifying payment: " + e.getMessage());
+        }
+    }
 }

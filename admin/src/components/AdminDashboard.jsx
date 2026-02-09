@@ -29,7 +29,14 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="flex min-h-screen bg-[#FDFBF7] text-[#1a1a1a] font-display">
+        <div className="flex min-h-screen bg-[#FDFBF7] text-[#1a1a1a] font-display relative overflow-hidden">
+             {/* Global Background Texture & Ambient Light */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#E56E0C]/5 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-[#D4AF37]/5 rounded-full blur-[100px]"></div>
+            </div>
+
             {/* Sidebar */}
             <aside className={`fixed md:sticky top-0 h-screen transition-all duration-500 z-50 ${sidebarOpen ? 'w-80 p-6' : 'w-0 -translate-x-full md:w-32 md:translate-x-0 md:p-6'} overflow-hidden`}>
                 <div className="h-full bg-white/80 backdrop-blur-2xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[40px] flex flex-col p-8 relative overflow-hidden">

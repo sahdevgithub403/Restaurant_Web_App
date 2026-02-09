@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { menuAPI } from '../services/api';
-import { Plus, Edit2, Trash2, Search, X, Check, Utensils } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, X, Check, Utensils, ArrowRight } from 'lucide-react';
 
 const AdminMenu = () => {
     const [items, setItems] = useState([]);
@@ -84,69 +84,75 @@ const AdminMenu = () => {
                 </button>
             </div>
 
-            <div className="bg-white rounded-[50px] border border-stone-50 shadow-[0_20px_50px_rgba(0,0,0,0.02)] overflow-hidden p-4">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-stone-100">
-                                <th className="p-8 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">The Dish</th>
-                                <th className="p-8 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Category</th>
-                                <th className="p-8 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Price</th>
-                                <th className="p-8 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">Status</th>
-                                <th className="p-8 font-display text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-50">
-                            {items.map((item) => (
-                                <tr key={item.id} className="hover:bg-[#FCF8F1]/50 transition-colors group rounded-3xl">
-                                    <td className="p-6 md:p-8">
-                                        <div className="flex items-center gap-8">
-                                            <div className="w-20 h-20 rounded-[24px] overflow-hidden shrink-0 shadow-[0_10px_20px_rgba(0,0,0,0.05)] group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] transition-shadow">
-                                                <img src={item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200"} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                            </div>
-                                            <div>
-                                                <p className="font-display font-bold text-xl text-[#1a1a1a] leading-tight mb-2 tracking-tight">{item.name}</p>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'} shadow-sm`}></span>
-                                                    <p className="font-body text-[9px] uppercase font-black text-stone-400 tracking-[0.2em]">{item.isVeg ? 'Vegetarian' : 'Non-Veg'}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-8">
-                                        <span className="font-display text-[9px] font-bold uppercase tracking-[0.2em] text-[#E56E0C] bg-[#E56E0C]/5 px-5 py-2.5 rounded-2xl border border-[#E56E0C]/10">
-                                            {item.category}
-                                        </span>
-                                    </td>
-                                    <td className="p-8">
-                                        <p className="font-display font-bold text-2xl text-[#1a1a1a] tracking-tight">₹{item.price}</p>
-                                    </td>
-                                    <td className="p-8">
-                                        <div className={`inline-flex items-center gap-3 px-5 py-2.5 rounded-full border ${item.available ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
-                                            <div className={`w-1.5 h-1.5 rounded-full ${item.available ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                                            <span className="text-[9px] uppercase font-black tracking-[0.2em]">
-                                                {item.available ? 'Live' : 'Hidden'}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-8 text-right">
-                                        <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                                            <button onClick={() => openEdit(item)} className="p-4 text-stone-400 hover:text-[#E56E0C] hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-stone-100"><Edit2 size={18} /></button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-4 text-stone-400 hover:text-red-500 hover:bg-white hover:shadow-lg rounded-2xl transition-all border border-transparent hover:border-stone-100"><Trash2 size={18} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {items.map((item, i) => (
+                    <div 
+                        key={item.id} 
+                        className="group bg-white rounded-[40px] border border-stone-50 shadow-[0_20px_40px_rgba(0,0,0,0.02)] hover:shadow-[0_30px_60px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all overflow-hidden relative flex flex-col animate-fade-in-up"
+                        style={{ animationDelay: `${i * 50}ms` }}
+                    >
+                        {/* Image Section */}
+                        <div className="h-64 overflow-hidden relative bg-stone-100">
+                             <img 
+                                src={item.imageUrl || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600"} 
+                                alt={item.name} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                             />
+                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
+                             
+                             {/* Floating Status Badge */}
+                             <div className="absolute top-4 left-4">
+                                <div className={`px-4 py-2 rounded-full backdrop-blur-md border ${item.available ? 'bg-white/90 text-green-700 border-green-200' : 'bg-red-50/90 text-red-700 border-red-200'} shadow-sm flex items-center gap-2`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${item.available ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
+                                    <span className="text-[9px] uppercase font-black tracking-widest">{item.available ? 'Live' : 'Hidden'}</span>
+                                </div>
+                             </div>
+
+                             {/* Floating Price */}
+                             <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md px-5 py-2 rounded-full font-display font-bold text-lg shadow-sm text-[#1a1a1a]">
+                                ₹{item.price}
+                             </div>
+                        </div>
+
+                        {/* Content Section */}
+                        <div className="p-8 flex flex-col flex-1">
+                            <div className="flex justify-between items-start mb-3">
+                                <span className="font-display text-[9px] font-bold uppercase tracking-[0.2em] text-[#E56E0C] bg-[#E56E0C]/5 px-3 py-1.5 rounded-xl border border-[#E56E0C]/10">
+                                    {item.category}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'} shadow-sm`}></span>
+                                </div>
+                            </div>
+                            
+                            <h3 className="font-display text-2xl font-bold text-[#1a1a1a] mb-2 leading-tight group-hover:text-[#E56E0C] transition-colors">{item.name}</h3>
+                            <p className="font-body text-xs text-stone-400 leading-relaxed line-clamp-2 mb-6 flex-1">{item.description}</p>
+                            
+                            {/* Actions Footer */}
+                            <div className="flex gap-3 mt-auto pt-6 border-t border-stone-50">
+                                <button 
+                                    onClick={() => openEdit(item)} 
+                                    className="flex-1 py-3 rounded-2xl bg-[#FCF8F1] text-stone-500 hover:bg-[#1a1a1a] hover:text-white transition-all font-display text-[10px] uppercase font-bold tracking-widest flex items-center justify-center gap-2 group/btn"
+                                >
+                                    <Edit2 size={14} /> Edit
+                                </button>
+                                <button 
+                                    onClick={() => handleDelete(item.id)} 
+                                    className="w-12 h-12 rounded-2xl bg-red-50 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm hover:shadow-red-500/20"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
                 {loading && (
                     <div className="p-40 flex flex-col items-center justify-center gap-6 text-stone-400">
                         <div className="w-14 h-14 border-4 border-stone-100 border-t-[#E56E0C] rounded-full animate-spin"></div>
                         <span className="font-body text-[10px] uppercase tracking-[0.4em] font-black">Syncing Kitchen...</span>
                     </div>
                 )}
-            </div>
 
             {/* Modal */}
             {showModal && (
