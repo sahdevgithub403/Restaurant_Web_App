@@ -7,14 +7,20 @@ import {
   ArrowUpRight,
   ArrowDownRight,
 } from "lucide-react";
+import axios from "axios";
 import { adminAPI } from "../../services/api";
+import websocketService from "../../services/websocket";
+
+// ... const API_URL ... or simply use axios with relative path if proxy set, but adminAPI uses full path. Let's use axios directly or create a method in adminAPI. For now, I'll use axios with the base URL.
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8081/api";
 
 const AdminOverview = () => {
   const [stats, setStats] = useState({
-    totalRevenue: 24500,
-    ordersToday: 52,
-    pendingOrders: 8,
+    totalOrdersToday: 0,
+    pendingOrders: 0,
+    totalRevenue: 0,
     avgOrderValue: 470,
+    // Keep internal UI change values for now if not in DB
     revenueChange: "+12.5%",
     ordersChange: "+5.2%",
     pendingChange: "-2.1%",
@@ -22,8 +28,33 @@ const AdminOverview = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const [restaurantStatus, setRestaurantStatus] = useState({
+    isOpen: true,
+    statusMessage: "",
+    estimatedWaitTime: "30-45 mins",
+  });
+
   useEffect(() => {
     fetchStats();
+    fetchRestaurantStatus();
+
+    websocketService.connect();
+    const unsubscribeStats = websocketService.subscribe(
+      "/topic/admin/stats",
+      (newStats) => {
+        setStats((prev) => ({ ...prev, ...newStats }));
+      },
+    );
+
+    const unsubscribeStatus = websocketService.subscribe(
+      "/topic/restaurant-status",
+      (newStatus) => setRestaurantStatus(newStatus),
+    );
+
+    return () => {
+      unsubscribeStats();
+      unsubscribeStatus();
+    };
   }, []);
 
   const fetchStats = async () => {
@@ -36,6 +67,31 @@ const AdminOverview = () => {
       console.error("Dashboard stats error:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRestaurantStatus = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/restaurant-status`);
+      setRestaurantStatus(res.data);
+    } catch (err) {
+      console.error("Status fetch error", err);
+    }
+  };
+
+  const toggleStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const newStatus = {
+        ...restaurantStatus,
+        isOpen: !restaurantStatus.isOpen,
+      };
+      const res = await axios.put(`${API_URL}/restaurant-status`, newStatus, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRestaurantStatus(res.data);
+    } catch (err) {
+      alert("Failed to update status");
     }
   };
 
@@ -70,6 +126,37 @@ const AdminOverview = () => {
 
   return (
     <div className="space-y-8">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className={`p-2 rounded-full ${restaurantStatus.isOpen ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"}`}
+          >
+            {restaurantStatus.isOpen ? (
+              <TrendingUp size={24} />
+            ) : (
+              <Layers size={24} />
+            )}
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800">Restaurant Status</h3>
+            <p className="text-sm text-slate-500">
+              Currently:{" "}
+              <span
+                className={`font-bold ${restaurantStatus.isOpen ? "text-emerald-600" : "text-red-600"}`}
+              >
+                {restaurantStatus.isOpen ? "OPEN" : "CLOSED"}
+              </span>
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={toggleStatus}
+          className={`px-6 py-2 rounded-lg font-bold text-sm text-white transition-colors ${restaurantStatus.isOpen ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"}`}
+        >
+          {restaurantStatus.isOpen ? "Close Restaurant" : "Open Restaurant"}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
@@ -81,7 +168,7 @@ const AdminOverview = () => {
         />
         <StatCard
           title="Orders Today"
-          value={stats.ordersToday}
+          value={stats.totalOrdersToday}
           change={stats.ordersChange}
           icon={ShoppingBag}
           isPositive={true}

@@ -1,11 +1,14 @@
 package com.restaurant.controller;
 
+import com.restaurant.dto.AdminStatsDTO;
 import com.restaurant.model.Order;
 import com.restaurant.model.User;
 import com.restaurant.repository.OrderRepository;
 import com.restaurant.repository.UserRepository;
+import com.restaurant.service.AdminDashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +26,12 @@ public class OrderController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private AdminDashboardService adminDashboardService;
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -63,7 +72,10 @@ public class OrderController {
             }
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        messagingTemplate.convertAndSend("/topic/orders", savedOrder);
+        messagingTemplate.convertAndSend("/topic/admin/stats", adminDashboardService.getStats());
+        return savedOrder;
     }
 
     @PutMapping("/{id}/status")
@@ -72,7 +84,11 @@ public class OrderController {
         return orderRepository.findById(id)
                 .map(order -> {
                     order.setStatus(status);
-                    return ResponseEntity.ok(orderRepository.save(order));
+                    Order updatedOrder = orderRepository.save(order);
+                    messagingTemplate.convertAndSend("/topic/orders", updatedOrder);
+                    messagingTemplate.convertAndSend("/topic/admin/stats", adminDashboardService.getStats());
+                    messagingTemplate.convertAndSend("/topic/order-status/" + order.getUser().getId(), updatedOrder);
+                    return ResponseEntity.ok(updatedOrder);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

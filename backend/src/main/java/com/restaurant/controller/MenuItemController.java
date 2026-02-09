@@ -4,6 +4,7 @@ import com.restaurant.model.MenuItem;
 import com.restaurant.repository.MenuItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,9 @@ public class MenuItemController {
 
     @Autowired
     private MenuItemRepository menuItemRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping
     public List<MenuItem> getAllMenuItems() {
@@ -38,7 +42,9 @@ public class MenuItemController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public MenuItem createMenuItem(@Valid @RequestBody MenuItem menuItem) {
-        return menuItemRepository.save(menuItem);
+        MenuItem savedItem = menuItemRepository.save(menuItem);
+        messagingTemplate.convertAndSend("/topic/menu", "UPDATE");
+        return savedItem;
     }
 
     @PutMapping("/{id}")
@@ -54,7 +60,9 @@ public class MenuItemController {
                     menuItem.setImageUrl(menuItemDetails.getImageUrl());
                     menuItem.setAvailable(menuItemDetails.getAvailable());
                     menuItem.setIsVeg(menuItemDetails.getIsVeg());
-                    return ResponseEntity.ok(menuItemRepository.save(menuItem));
+                    MenuItem updatedItem = menuItemRepository.save(menuItem);
+                    messagingTemplate.convertAndSend("/topic/menu", "UPDATE");
+                    return ResponseEntity.ok(updatedItem);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -65,6 +73,7 @@ public class MenuItemController {
         return menuItemRepository.findById(id)
                 .map(menuItem -> {
                     menuItemRepository.delete(menuItem);
+                    messagingTemplate.convertAndSend("/topic/menu", "UPDATE");
                     return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());

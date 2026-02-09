@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import websocketService from "../../services/websocket";
+import { toast, Toaster } from "react-hot-toast";
 import {
   LayoutDashboard,
   UtensilsCrossed,
@@ -10,6 +12,7 @@ import {
   Search,
   Menu,
   User as UserIcon,
+  Calendar,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -17,6 +20,28 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  React.useEffect(() => {
+    websocketService.connect();
+    const unsubscribe = websocketService.subscribe("/topic/orders", (order) => {
+      // Only notify if it's a new order (status PENDING)
+      if (order.status === "PENDING") {
+        toast.success(`New order from ${order.customerName}!`, {
+          duration: 6000,
+          position: "top-right",
+          icon: "🛍️",
+        });
+
+        // Play a subtle sound if possible or other notification
+        try {
+          const audio = new Audio("/notification.mp3"); // Assuming file exists or fails gracefully
+          audio.play().catch(() => {});
+        } catch (e) {}
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -27,6 +52,7 @@ const AdminLayout = () => {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/menu", label: "Menu Items", icon: UtensilsCrossed },
     { path: "/orders", label: "Orders", icon: ShoppingCart },
+    { path: "/reservations", label: "Reservations", icon: Calendar },
   ];
 
   const currentPath = location.pathname.split("/")[1] || "dashboard";
@@ -34,6 +60,7 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
+      <Toaster />
       {/* Simple Sidebar */}
       <aside
         className={`${sidebarOpen ? "w-64" : "w-20"} bg-white border-r border-slate-200 transition-all duration-200 flex flex-col z-50`}

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = "http://localhost:3000") // Adjust for frontend URL
+@CrossOrigin(origins = "http://localhost:5174") // Adjust for frontend URL
 public class PaymentController {
 
     @Autowired
@@ -18,6 +18,7 @@ public class PaymentController {
 
     @PostMapping("/create-order")
     public ResponseEntity<String> createOrder(@RequestBody PaymentRequest paymentRequest) {
+        System.out.println("🔥 Payment controller reached");
         try {
             String order = paymentService.createOrder(paymentRequest.getAmount(), paymentRequest.getCurrency());
             return ResponseEntity.ok(order);
@@ -27,7 +28,7 @@ public class PaymentController {
         }
     }
 
-    @PostMapping("/verify")
+    @PostMapping("/verify-payment")
     public ResponseEntity<?> verifyPayment(
             @RequestBody com.restaurant.dto.PaymentVerificationRequest verificationRequest) {
         try {
@@ -37,10 +38,10 @@ public class PaymentController {
                     verificationRequest.getRazorpaySignature());
 
             if (isValid) {
-                return ResponseEntity.ok().body("{\"status\": \"success\"}");
+                return ResponseEntity.ok().body("{\"verified\": true}");
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("{\"status\": \"failure\", \"message\": \"Invalid signature\"}");
+                        .body("{\"verified\": false, \"message\": \"Invalid signature\"}");
             }
         } catch (RazorpayException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

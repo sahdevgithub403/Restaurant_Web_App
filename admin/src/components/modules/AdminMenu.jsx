@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { menuAPI } from "../../services/api";
+import websocketService from "../../services/websocket";
 import { Plus, Edit2, Trash2, Search, Loader2, X, Save } from "lucide-react";
 
 const AdminMenu = () => {
@@ -17,24 +18,32 @@ const AdminMenu = () => {
     category: "",
     imageUrl: "",
     available: true,
+    isVeg: true,
   });
 
-  const categories = ["Scoops", "Sundaes", "Shakes", "Waffles", "Specials"];
-
-  const fetchMenuItems = async () => {
-    setLoading(true);
+  const fetchMenuItems = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const response = await menuAPI.getMenuItems();
       setMenuItems(response.data || []);
     } catch (err) {
       console.error("Fetch menu error:", err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMenuItems();
+
+    websocketService.connect();
+    const unsubscribe = websocketService.subscribe("/topic/menu", () => {
+      fetchMenuItems(false); // Silent refresh
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const openModal = (item = null) => {
@@ -47,6 +56,7 @@ const AdminMenu = () => {
         category: item.category || "",
         imageUrl: item.imageUrl || item.image || "",
         available: item.available !== false,
+        isVeg: item.isVeg !== false,
       });
     } else {
       setEditingItem(null);
@@ -57,6 +67,7 @@ const AdminMenu = () => {
         category: "",
         imageUrl: "",
         available: true,
+        isVeg: true,
       });
     }
     setShowModal(true);
@@ -66,7 +77,12 @@ const AdminMenu = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...formData, price: parseFloat(formData.price) };
+      const payload = {
+        ...formData,
+        price: parseFloat(formData.price),
+        category: "General", // Default category since field is removed
+      };
+
       if (editingItem) await menuAPI.updateMenuItem(editingItem.id, payload);
       else await menuAPI.createMenuItem(payload);
       await fetchMenuItems();
@@ -78,10 +94,8 @@ const AdminMenu = () => {
     }
   };
 
-  const filteredItems = menuItems.filter(
-    (item) =>
-      item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredItems = menuItems.filter((item) =>
+    item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading && menuItems.length === 0) {
@@ -121,7 +135,6 @@ const AdminMenu = () => {
           <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
             <tr>
               <th className="px-6 py-4">Item</th>
-              <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4">Price</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
@@ -139,12 +152,18 @@ const AdminMenu = () => {
                       src={item.imageUrl || item.image}
                       className="w-10 h-10 rounded-lg object-cover bg-slate-100"
                     />
-                    <span className="font-medium text-slate-900">
-                      {item.name}
-                    </span>
+                    <div>
+                      <span className="font-medium text-slate-900 block">
+                        {item.name}
+                      </span>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded border ${item.isVeg ? "border-green-600 text-green-600" : "border-red-600 text-red-600"}`}
+                      >
+                        {item.isVeg ? "VEG" : "NON-VEG"}
+                      </span>
+                    </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-slate-600">{item.category}</td>
                 <td className="px-6 py-4 font-semibold text-slate-900">
                   ₹{item.price}
                 </td>
@@ -209,27 +228,25 @@ const AdminMenu = () => {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                     required
                   />
+                  <div className="pt-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.isVeg}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isVeg: e.target.checked })
+                      }
+                      id="isVeg"
+                      className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="isVeg"
+                      className="text-xs font-semibold text-slate-600 cursor-pointer"
+                    >
+                      Vegetarian Item
+                    </label>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-slate-500">
-                    Category
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) =>
-                      setFormData({ ...formData, category: e.target.value })
-                    }
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none"
-                    required
-                  >
-                    <option value="">Select...</option>
-                    {categories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-500">
                     Price (₹)

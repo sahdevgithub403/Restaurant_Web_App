@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { orderAPI } from "../../services/api";
 import { Search, Loader2, Eye, Clock, X, RefreshCw } from "lucide-react";
+import websocketService from "../../services/websocket";
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -14,7 +15,11 @@ const AdminOrders = () => {
     setLoading(true);
     try {
       const response = await orderAPI.getOrders();
-      setOrders(response.data || []);
+      // Ensure we sort by date desc
+      const sortedOrders = (response.data || []).sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
+      setOrders(sortedOrders);
     } catch (err) {
       console.error("Orders error:", err);
     } finally {
@@ -24,8 +29,27 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-    const interval = setInterval(fetchOrders, 30000);
-    return () => clearInterval(interval);
+
+    websocketService.connect();
+    const unsubscribe = websocketService.subscribe(
+      "/topic/orders",
+      (newOrder) => {
+        setOrders((prevOrders) => {
+          const orderExists = prevOrders.find((o) => o.id === newOrder.id);
+          if (orderExists) {
+            // Update existing order (like status change)
+            return prevOrders.map((o) => (o.id === newOrder.id ? newOrder : o));
+          } else {
+            // Add new order to the top
+            return [newOrder, ...prevOrders];
+          }
+        });
+      },
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const updateStatus = async (orderId, newStatus) => {

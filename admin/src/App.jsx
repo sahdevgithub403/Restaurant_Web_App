@@ -11,6 +11,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import AdminOverview from "./components/modules/AdminOverview";
 import AdminMenu from "./components/modules/AdminMenu";
 import AdminOrders from "./components/modules/AdminOrders";
+import AdminReservations from "./components/modules/AdminReservations";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -78,6 +79,7 @@ function App() {
               <Route path="dashboard" element={<AdminOverview />} />
               <Route path="menu" element={<AdminMenu />} />
               <Route path="orders" element={<AdminOrders />} />
+              <Route path="reservations" element={<AdminReservations />} />
             </Route>
 
             {/* Catch all - redirect to dashboard */}
