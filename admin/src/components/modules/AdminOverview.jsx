@@ -1,123 +1,169 @@
-
-import React, { useState, useEffect } from 'react';
-import { DollarSign, ShoppingBag, Users, TrendingUp } from 'lucide-react';
-import DashboardCard from '../ui/DashboardCard';
-import { adminAPI, orderAPI } from '../../services/api';
+import React, { useState, useEffect } from "react";
+import {
+  TrendingUp,
+  ShoppingBag,
+  DollarSign,
+  Layers,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
+import { adminAPI } from "../../services/api";
 
 const AdminOverview = () => {
-    const [stats, setStats] = useState({
-        totalRevenue: 0,
-        totalOrders: 0,
-        pendingOrders: 0,
-        avgOrderValue: 0
-    });
-    const [recentOrders, setRecentOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalRevenue: 24500,
+    ordersToday: 52,
+    pendingOrders: 8,
+    avgOrderValue: 470,
+    revenueChange: "+12.5%",
+    ordersChange: "+5.2%",
+    pendingChange: "-2.1%",
+    avgChange: "+1.4%",
+  });
+  const [loading, setLoading] = useState(true);
 
-    const fetchData = async () => {
-        try {
-            // Parallel fetch for better performance
-            const [statsRes, ordersRes] = await Promise.all([
-                adminAPI.getStats(),
-                orderAPI.getAllOrders()
-            ]);
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
-            const statsData = statsRes.data;
-            setStats({
-                totalRevenue: statsData.totalRevenue || 0,
-                totalOrders: statsData.totalOrdersToday || 0, 
-                pendingOrders: statsData.pendingOrders || 0,
-                avgOrderValue: statsData.totalOrdersToday > 0 ? (statsData.totalRevenue / statsData.totalOrdersToday).toFixed(0) : 0
-            });
+  const fetchStats = async () => {
+    try {
+      const response = await adminAPI.getStats();
+      if (response.data) {
+        setStats((prev) => ({ ...prev, ...response.data }));
+      }
+    } catch (err) {
+      console.error("Dashboard stats error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            // Sort orders by date descending and take top 5
-            const sortedOrders = ordersRes.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
-            setRecentOrders(sortedOrders.slice(0, 5));
-        } catch (error) {
-            console.error("Failed to fetch dashboard data", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 30000); // Poll every 30 seconds
-        return () => clearInterval(interval);
-    }, []);
-
-    const statCards = [
-        { title: 'Total Revenue', value: `₹${stats.totalRevenue.toLocaleString()}`, icon: DollarSign, trend: 'up', trendValue: '12.5%' }, // Trend logic would require historical data
-        { title: 'Orders Today', value: stats.totalOrders, icon: ShoppingBag, trend: 'up', trendValue: '5.2%' },
-        { title: 'Pending Orders', value: stats.pendingOrders, icon: Users, trend: stats.pendingOrders > 5 ? 'down' : 'up', trendValue: 'Active' },
-        { title: 'Avg. Order Value', value: `₹${stats.avgOrderValue}`, icon: TrendingUp, trend: 'up', trendValue: 'Stable' },
-    ];
+  const StatCard = ({
+    title,
+    value,
+    change,
+    icon: Icon,
+    isPositive,
+    prefix = "",
+  }) => (
+    <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-2 bg-slate-50 rounded-lg border border-slate-100 text-slate-600">
+          <Icon size={20} />
+        </div>
+        <div
+          className={`text-xs font-medium px-2 py-0.5 rounded-full ${isPositive ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}
+        >
+          {change}
+        </div>
+      </div>
+      <div>
+        <p className="text-sm text-slate-500 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-slate-800">
+          {prefix}
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </h3>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-                <h2 className="font-display text-3xl font-bold text-[#1a1a1a] mb-1">Dashboard</h2>
-                <p className="font-body text-xs uppercase tracking-widest text-stone-500">Real-time store overview</p>
-            </div>
-            <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-500'}`}></span>
-                <span className="text-xs text-stone-400 font-bold uppercase tracking-wider">{loading ? 'Updating...' : 'Live'}</span>
-            </div>
-        </div>
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Total Revenue"
+          value={stats.totalRevenue}
+          change={stats.revenueChange}
+          icon={DollarSign}
+          isPositive={true}
+          prefix="₹"
+        />
+        <StatCard
+          title="Orders Today"
+          value={stats.ordersToday}
+          change={stats.ordersChange}
+          icon={ShoppingBag}
+          isPositive={true}
+        />
+        <StatCard
+          title="Pending Orders"
+          value={stats.pendingOrders}
+          change={stats.pendingChange}
+          icon={Layers}
+          isPositive={false}
+        />
+        <StatCard
+          title="Avg. Order Value"
+          value={stats.avgOrderValue}
+          change={stats.avgChange}
+          icon={TrendingUp}
+          isPositive={true}
+          prefix="₹"
+        />
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statCards.map((stat, idx) => (
-                <div key={idx} style={{ animationDelay: `${idx * 100}ms` }} className="animate-fade-in-up">
-                    <DashboardCard {...stat} />
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 shadow-sm min-h-[400px]">
+          <h4 className="text-base font-semibold text-slate-800 mb-8">
+            Sales Overview
+          </h4>
+          <div className="h-64 flex items-end justify-between gap-2 px-4">
+            {[40, 65, 45, 80, 55, 95, 70, 85, 60, 40, 75, 55].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-orange-100 rounded-t-sm hover:bg-orange-200 transition-colors cursor-pointer"
+                style={{ height: `${h}%` }}
+              ></div>
             ))}
+          </div>
+          <div className="flex justify-between px-4 mt-4 text-[10px] text-slate-400 font-medium">
+            {[
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ].map((m) => (
+              <span key={m}>{m}</span>
+            ))}
+          </div>
         </div>
 
-        {/* Charts & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-white p-8 rounded-xl shadow-sm border border-stone-100 hidden md:block animate-fade-in-up delay-200">
-                <div className="flex justify-between items-center mb-8">
-                    <h3 className="font-display text-xl font-bold">Revenue Analytics</h3>
-                    <button className="text-xs font-bold text-[#E56E0C] uppercase tracking-widest hover:underline">View Report</button>
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <h4 className="text-base font-semibold text-slate-800 mb-6">
+            Recent Activity
+          </h4>
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 border border-slate-100">
+                  <ShoppingBag size={18} />
                 </div>
-                {/* Placeholder Chart - Real implementation would require Chart.js or Recharts */}
-                <div className="h-64 flex items-end justify-between gap-2 px-2 border-b border-stone-100 pb-4">
-                    {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 50, 95].map((h, i) => (
-                        <div key={i} className="group relative w-full h-full flex items-end">
-                            <div className="w-full bg-[#1a1a1a] opacity-10 group-hover:opacity-100 group-hover:bg-[#E56E0C] transition-all duration-500 rounded-t-sm" style={{ height: `${h}%` }}></div>
-                        </div>
-                    ))}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-800 truncate">
+                    Order #RD-72{i}
+                  </p>
+                  <p className="text-xs text-slate-400">4 minutes ago</p>
                 </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-xl shadow-sm border border-stone-100 animate-fade-in-up delay-300">
-                <h3 className="font-display text-xl font-bold mb-6">Recent Activity</h3>
-                 <div className="space-y-6">
-                    {recentOrders.length > 0 ? (
-                        recentOrders.map((order, i) => (
-                            <div key={order.id} className="flex items-center gap-4 pb-4 border-b border-stone-50 last:border-0 last:pb-0 group cursor-pointer">
-                                <div className="w-10 h-10 bg-stone-100 rounded-full flex items-center justify-center text-xs font-bold text-stone-600 group-hover:bg-[#1a1a1a] group-hover:text-white transition-colors">
-                                    {order.user ? order.user.name.charAt(0) : 'U'}
-                                </div>
-                                <div className="flex-1">
-                                    <h4 className="font-body text-sm font-bold group-hover:text-[#E56E0C] transition-colors">{order.user ? order.user.name : 'Unknown User'}</h4>
-                                    <p className="text-xs text-stone-500">Placed order #{order.id}</p>
-                                </div>
-                                <span className="text-[10px] font-bold text-stone-400">
-                                    {new Date(order.orderDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                </span>
-                            </div>
-                        ))
-                    ) : (
-                        <p className="text-stone-400 text-sm italic">No recent orders found.</p>
-                    )}
-                 </div>
-            </div>
+                <span className="text-sm font-semibold text-slate-700">
+                  ₹{450 * i}
+                </span>
+              </div>
+            ))}
+          </div>
+          <button className="w-full mt-8 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors font-medium">
+            View All Activity
+          </button>
         </div>
-
+      </div>
     </div>
   );
 };

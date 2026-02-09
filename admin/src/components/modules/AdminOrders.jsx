@@ -1,147 +1,260 @@
-
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Loader2 } from 'lucide-react';
-import AdminTable from '../ui/AdminTable';
-import { orderAPI } from '../../services/api';
+import React, { useState, useEffect } from "react";
+import { orderAPI } from "../../services/api";
+import { Search, Loader2, Eye, Clock, X, RefreshCw } from "lucide-react";
 
 const AdminOrders = () => {
-    const [orders, setOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterStatus, setFilterStatus] = useState("All");
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [updating, setUpdating] = useState(null);
 
-    const fetchOrders = async () => {
-        setLoading(true);
-        try {
-            const res = await orderAPI.getAllOrders();
-            setOrders(res.data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await orderAPI.getOrders();
+      setOrders(response.data || []);
+    } catch (err) {
+      console.error("Orders error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-        fetchOrders();
-        // Polling
-        const interval = setInterval(fetchOrders, 15000); 
-        return () => clearInterval(interval);
-    }, []);
+  useEffect(() => {
+    fetchOrders();
+    const interval = setInterval(fetchOrders, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-    const handleStatusUpdate = async (id, newStatus) => {
-        try {
-            await orderAPI.updateOrderStatus(id, newStatus);
-            fetchOrders();
-        } catch (err) {
-            console.error("Update failed", err);
-        }
-    };
+  const updateStatus = async (orderId, newStatus) => {
+    setUpdating(orderId);
+    try {
+      await orderAPI.updateOrderStatus(orderId, { status: newStatus });
+      await fetchOrders();
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder((prev) => ({ ...prev, status: newStatus }));
+      }
+    } catch (err) {
+      alert("Status update failed");
+    } finally {
+      setUpdating(null);
+    }
+  };
 
-    const getStatusColor = (status) => {
-        switch(status) {
-            case 'COMPLETED': return 'bg-green-100 text-green-700';
-            case 'PENDING': return 'bg-yellow-100 text-yellow-700';
-            case 'PROCESSING': return 'bg-blue-100 text-blue-700';
-            case 'CANCELLED': return 'bg-red-100 text-red-700';
-            default: return 'bg-stone-100 text-stone-700';
-        }
-    };
+  const statusMap = {
+    pending: { label: "Pending", class: "bg-amber-50 text-amber-600" },
+    processing: { label: "In Progress", class: "bg-blue-50 text-blue-600" },
+    delivered: { label: "Delivered", class: "bg-emerald-50 text-emerald-600" },
+    cancelled: { label: "Cancelled", class: "bg-rose-50 text-rose-600" },
+  };
 
-    const filteredOrders = orders.filter(order => {
-        const matchesSearch = (order.id.toString().includes(searchTerm) || (order.user && order.user.name.toLowerCase().includes(searchTerm.toLowerCase())));
-        const matchesFilter = filterStatus === 'All' || order.status === filterStatus;
-        return matchesSearch && matchesFilter;
-    });
+  const filteredOrders = orders.filter((order) => {
+    const matchesFilter =
+      filter === "all" || order.status.toLowerCase() === filter.toLowerCase();
+    const matchesSearch =
+      order.id?.toString().includes(searchQuery) ||
+      order.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
-    const columns = [
-        { header: 'Order ID', accessor: 'id', render: row => <span className="font-display font-bold text-[#1a1a1a]">#{row.id}</span> },
-        { header: 'Customer', accessor: 'user', render: row => <span className="font-body text-sm font-semibold">{row.user ? row.user.name : 'Guest'}</span> },
-        { 
-            header: 'Items', 
-            accessor: 'orderItems', 
-            render: row => (
-                <span className="font-body text-xs text-stone-500 truncate block max-w-[150px]" title={row.orderItems.map(i => i.menuItem.name).join(', ')}>
-                    {row.orderItems.length} items
-                </span>
-            ) 
-        },
-        { 
-            header: 'Date', 
-            accessor: 'orderDate', 
-            render: row => <span className="font-body text-xs text-stone-400 uppercase tracking-wide">{new Date(row.orderDate).toLocaleDateString()}</span> 
-        },
-        { header: 'Total', accessor: 'totalAmount', render: row => <span className="font-body text-sm font-bold text-[#1a1a1a]">₹{row.totalAmount}</span> },
-        { 
-            header: 'Status', 
-            accessor: 'status', 
-            render: row => (
-                <div className="relative group/status cursor-pointer">
-                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${getStatusColor(row.status)}`}>{row.status}</span>
-                    {/* Quick Status Change Hover */}
-                    <div className="absolute top-full left-0 mt-1 bg-white shadow-xl rounded-lg p-2 z-20 hidden group-hover/status:flex flex-col gap-1 min-w-[100px] border border-stone-100">
-                        {['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'].map(s => (
-                            <button 
-                                key={s} 
-                                onClick={() => handleStatusUpdate(row.id, s)}
-                                className="text-xs text-left px-2 py-1 hover:bg-stone-50 rounded uppercase font-bold text-stone-500 hover:text-black"
-                            >
-                                {s}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            ) 
-        },
-    ];
+  if (loading && orders.length === 0) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin text-slate-300" size={40} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h2 className="font-display text-3xl font-bold text-[#1a1a1a] mb-1">Orders</h2>
-                <p className="font-body text-xs uppercase tracking-widest text-stone-500">Track and manage customer orders</p>
-            </div>
-             <div className="flex bg-white rounded-full p-1 border border-stone-100 shadow-sm">
-                 {['All', 'PENDING', 'PROCESSING', 'COMPLETED'].map(status => (
-                    <button 
-                        key={status}
-                        onClick={() => setFilterStatus(status)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${filterStatus === status ? 'bg-[#1a1a1a] text-white shadow-md' : 'text-stone-500 hover:text-[#1a1a1a]'}`}
-                    >
-                        {status}
-                    </button>
-                 ))}
-            </div>
+    <div className="space-y-6">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+        <div className="flex gap-2">
+          {["all", "pending", "processing", "delivered"].map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${filter === f ? "bg-orange-600 text-white shadow-sm" : "bg-slate-50 text-slate-600 hover:bg-slate-100"}`}
+            >
+              {f === "all"
+                ? "All Orders"
+                : f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
         </div>
-
-        {/* Filters & Search */}
-        <div className="flex gap-4">
-            <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={18} />
-                <input 
-                    type="text" 
-                    placeholder="Search by ID or Customer..." 
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-white rounded-lg border border-stone-200 focus:outline-none focus:border-[#1a1a1a] font-body text-sm shadow-sm transition-all focus:shadow-md"
-                />
-            </div>
-        </div>
-
-        {/* Table */}
-        {loading ? (
-             <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#E56E0C]" /></div>
-        ) : (
-            <AdminTable 
-                columns={columns} 
-                data={filteredOrders}
-                actions={true}
-                onEdit={(item) => console.log("View Order", item)}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={16}
             />
-        )}
+            <input
+              type="text"
+              placeholder="Search orders..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 w-64"
+            />
+          </div>
+          <button
+            onClick={fetchOrders}
+            className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+          >
+            <RefreshCw size={20} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+      </div>
 
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
+            <tr>
+              <th className="px-6 py-4">Order ID</th>
+              <th className="px-6 py-4">Customer</th>
+              <th className="px-6 py-4">Time</th>
+              <th className="px-6 py-4">Amount</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredOrders.map((order) => (
+              <tr
+                key={order.id}
+                className="hover:bg-slate-50/50 transition-colors"
+              >
+                <td className="px-6 py-4 font-semibold text-slate-900">
+                  #{order.id}
+                </td>
+                <td className="px-6 py-4">
+                  <p className="font-medium text-slate-900 leading-none">
+                    {order.customerName}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">{order.phone}</p>
+                </td>
+                <td className="px-6 py-4 text-slate-600">
+                  {new Date(order.createdAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
+                <td className="px-6 py-4 font-semibold text-slate-900">
+                  ₹{order.totalAmount}
+                </td>
+                <td className="px-6 py-4">
+                  <span
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${statusMap[order.status.toLowerCase()]?.class || "bg-slate-100 text-slate-500"}`}
+                  >
+                    {order.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-right">
+                  <button
+                    onClick={() => setSelectedOrder(order)}
+                    className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                  >
+                    <Eye size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">
+                Order Details #{selectedOrder.id}
+              </h3>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="text-slate-400 hover:text-slate-600 text-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-8">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                    Customer Information
+                  </label>
+                  <p className="mt-1 font-semibold text-slate-800">
+                    {selectedOrder.customerName}
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    {selectedOrder.phone}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                    Delivery Address
+                  </label>
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+                    {selectedOrder.address || "Counter Pickup"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
+                  Order Manifest
+                </label>
+                <div className="bg-slate-50 rounded-xl border border-slate-100 divide-y divide-slate-200 overflow-hidden">
+                  {selectedOrder.items?.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 flex justify-between items-center"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-slate-800">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Quantity: {item.quantity}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-slate-700">
+                        ₹{item.price * item.quantity}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="p-4 bg-white flex justify-between items-center font-bold text-lg">
+                    <span className="text-slate-500">Total Settlement</span>
+                    <span className="text-orange-600">
+                      ₹{selectedOrder.totalAmount}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-tighter block mb-3">
+                  Update Order Status
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {["PENDING", "PROCESSING", "DELIVERED", "CANCELLED"].map(
+                    (s) => (
+                      <button
+                        key={s}
+                        onClick={() => updateStatus(selectedOrder.id, s)}
+                        disabled={updating === selectedOrder.id}
+                        className={`py-2 rounded-lg text-[10px] font-bold transition-all border ${selectedOrder.status.toUpperCase() === s ? "bg-orange-600 border-orange-600 text-white" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                      >
+                        {s}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
