@@ -12,6 +12,7 @@ com\restaurant\model\Payment$PaymentStatus.class
 com\restaurant\controller\PaymentController.class
 com\restaurant\dto\LoginRequest.class
 com\restaurant\repository\OrderRepository.class
+com\restaurant\config\WebSocketConfig$1.class
 com\restaurant\repository\MenuItemRepository.class
 com\restaurant\util\DatabaseSeeder.class
 com\restaurant\model\Payment.class

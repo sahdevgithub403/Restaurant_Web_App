@@ -1,5 +1,6 @@
 package com.restaurant.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -11,6 +12,7 @@ public class RestaurantStatus {
     @Id
     private Long id = 1L; // Singleton entity
 
+    @JsonProperty("isOpen")
     private boolean isOpen;
     private String statusMessage; // e.g., "Closed for maintenance", "We are currently experiencing high volume"
     private String estimatedWaitTime; // e.g., "30-45 mins"
