@@ -129,11 +129,16 @@ api.interceptors.response.use(
     if ((status === 401 || status === 403) && !isAuthEndpoint) {
       console.error(`Admin Auth Failure on ${url}: ${status}`);
       
-      // Let AuthContext handle logout transition
+      // Auto-clear stale state on authorization failure
+      if (status === 403 || status === 401) {
+        clearAuthData();
+      }
+
+      // Let AuthContext handle logout transition/UI
       if (authErrorHandler) {
         const message = status === 401 
           ? 'Session expired. Please login again.' 
-          : 'Access denied. Admin privileges required.';
+          : 'Access denied. Please login with an Admin account.';
         authErrorHandler(message);
       }
     }

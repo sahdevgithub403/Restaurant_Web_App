@@ -32,8 +32,7 @@ const AdminLayout = () => {
     const unsubscribe = websocketService.subscribe("/topic/orders", (order) => {
       // Only notify if it's a new order (status PENDING)
       if (order.status === "PENDING") {
-        const customerName =
-          order.user?.fullName || order.user?.username || "a Guest";
+        const customerName = order.fullName || order.username || "a Guest";
         toast.success(`New order from ${customerName}!`, {
           duration: 6000,
           position: "top-right",

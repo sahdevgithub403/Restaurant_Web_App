@@ -77,8 +77,7 @@ const AdminOrders = () => {
   const filteredOrders = orders.filter((order) => {
     const matchesFilter =
       filter === "all" || order.status.toLowerCase() === filter.toLowerCase();
-    const customerName =
-      order.user?.fullName || order.user?.username || "Guest";
+    const customerName = order.fullName || order.username || "Guest";
     const matchesSearch =
       order.id?.toString().includes(searchQuery) ||
       customerName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -161,10 +160,10 @@ const AdminOrders = () => {
                 </td>
                 <td className="px-6 py-4">
                   <p className="font-medium text-slate-900 leading-none">
-                    {order.user?.fullName || order.user?.username || "Guest"}
+                    {order.fullName || order.username || "Guest"}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
-                    {order.phoneNumber || order.user?.phoneNumber || "N/A"}
+                    {order.username || order.phoneNumber || "N/A"}
                   </p>
                 </td>
                 <td className="px-6 py-4 text-slate-600">
@@ -218,14 +217,14 @@ const AdminOrders = () => {
                     Customer Information
                   </label>
                   <p className="mt-1 font-semibold text-slate-800">
-                    {selectedOrder.user?.fullName ||
-                      selectedOrder.user?.username ||
+                    {selectedOrder.fullName ||
+                      selectedOrder.username ||
                       "Guest"}
                   </p>
                   <p className="text-sm text-slate-500">
-                    {selectedOrder.phoneNumber ||
-                      selectedOrder.user?.phoneNumber ||
-                      selectedOrder.user?.email}
+                    {selectedOrder.username ||
+                      selectedOrder.phoneNumber ||
+                      "N/A"}
                   </p>
                 </div>
                 <div>

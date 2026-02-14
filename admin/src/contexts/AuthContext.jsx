@@ -99,14 +99,38 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login({ username, password });
       const data = response.data;
 
-      // Validate token exists
-      if (!data.token) {
-        throw new Error("No token received from server");
+      console.log(
+        "DEBUG [Admin]: Raw login response:",
+        JSON.stringify(data, null, 2),
+      );
+
+      // Handle both possible token field names
+      const jwt = data.token || data.accessToken;
+
+      if (!jwt) {
+        console.error(
+          "Admin login failed: No token in response. Keys:",
+          Object.keys(data),
+        );
+        return { success: false, error: "No token received from server" };
       }
 
+      // Handle role as string ("ADMIN") or array (["ROLE_ADMIN"])
+      let userRole = data.role;
+      if (!userRole && data.roles) {
+        userRole = Array.isArray(data.roles)
+          ? data.roles[0]?.replace("ROLE_", "")
+          : data.roles;
+      }
+
+      console.log("DEBUG [Admin]: Resolved role:", userRole);
+
       // Validate admin role
-      if (data.role !== "ADMIN") {
-        throw new Error("Access denied. Admin privileges required.");
+      if (userRole !== "ADMIN") {
+        return {
+          success: false,
+          error: "Access denied. Admin privileges required.",
+        };
       }
 
       const userData = {
@@ -114,16 +138,30 @@ export const AuthProvider = ({ children }) => {
         username: data.username,
         email: data.email,
         fullName: data.fullName,
-        role: data.role,
+        role: userRole,
       };
 
+      // Save to state and localStorage
       setUser(userData);
-      localStorage.setItem("token", data.token);
+      localStorage.setItem("token", jwt);
       localStorage.setItem("user", JSON.stringify(userData));
 
+      // Verify save
+      const savedToken = localStorage.getItem("token");
+      if (!savedToken) {
+        console.error(
+          "CRITICAL [Admin]: Token failed to save to localStorage!",
+        );
+        return { success: false, error: "Failed to save authentication data" };
+      }
+
+      console.log("DEBUG [Admin]: Login complete. Token saved successfully.");
       return { success: true };
     } catch (error) {
-      console.error("Admin login failed:", error);
+      console.error(
+        "Admin login failed:",
+        error.response?.data || error.message,
+      );
       const message =
         error.response?.data?.message || error.message || "Login failed";
       return { success: false, error: message };
