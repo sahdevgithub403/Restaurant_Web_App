@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { reservationAPI } from "../../services/api";
 import { Check, X, Clock, Users, Calendar } from "lucide-react";
 import websocketService from "../../services/websocket";
@@ -50,7 +51,7 @@ const AdminReservations = () => {
       await reservationAPI.updateReservationStatus(id, status);
       // No need to manually update state, WebSocket will do it
     } catch (err) {
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     }
   };
 

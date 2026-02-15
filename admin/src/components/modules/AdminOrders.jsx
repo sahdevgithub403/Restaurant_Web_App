@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { orderAPI } from "../../services/api";
 import { Search, Loader2, Eye, X, RefreshCw } from "lucide-react";
 import websocketService from "../../services/websocket";
@@ -59,7 +60,7 @@ const AdminOrders = () => {
       }
     } catch (err) {
       console.error("Status update failed:", err);
-      alert("Status update failed");
+      toast.error("Status update failed");
     } finally {
       setUpdating(null);
     }

@@ -57,7 +57,21 @@ public class JwtTokenProvider {
                     .build()
                     .parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException ex) {
+            System.out.println("DEBUG JWT VALIDATE: Token EXPIRED - " + ex.getMessage());
+            return false;
+        } catch (SignatureException ex) {
+            System.out.println("DEBUG JWT VALIDATE: SIGNATURE MISMATCH - " + ex.getMessage());
+            return false;
+        } catch (MalformedJwtException ex) {
+            System.out.println("DEBUG JWT VALIDATE: MALFORMED token - " + ex.getMessage());
+            return false;
+        } catch (UnsupportedJwtException ex) {
+            System.out.println("DEBUG JWT VALIDATE: UNSUPPORTED token - " + ex.getMessage());
+            return false;
         } catch (JwtException | IllegalArgumentException ex) {
+            System.out.println(
+                    "DEBUG JWT VALIDATE: OTHER error - " + ex.getClass().getSimpleName() + ": " + ex.getMessage());
             return false;
         }
     }

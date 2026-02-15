@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { menuAPI } from "../../services/api";
 import websocketService from "../../services/websocket";
 import { Plus, Edit2, Trash2, Search, Loader2, X, Save } from "lucide-react";
@@ -51,7 +52,7 @@ const AdminMenu = () => {
 
   const openModal = (item = null) => {
     if (!isAdmin) {
-      alert("You do not have permission to add or edit items.");
+      toast.error("You do not have permission to add or edit items.");
       return;
     }
     if (item) {
@@ -85,7 +86,7 @@ const AdminMenu = () => {
     setSaving(true);
     const price = parseFloat(formData.price);
     if (isNaN(price) || price <= 0) {
-      alert("Please enter a valid price greater than 0");
+      toast.error("Please enter a valid price greater than 0");
       setSaving(false);
       return;
     }
@@ -103,11 +104,11 @@ const AdminMenu = () => {
     } catch (err) {
       console.error(err);
       if (err.response?.status === 403) {
-        alert(
+        toast.error(
           "Permission Denied: You need Admin privileges to perform this action.",
         );
       } else {
-        alert(
+        toast.error(
           err.response?.data?.message || err.message || "Error saving item",
         );
       }

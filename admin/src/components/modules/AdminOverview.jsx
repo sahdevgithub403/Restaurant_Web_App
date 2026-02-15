@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useNavigate, Link } from "react-router-dom";
 import {
   TrendingUp,
@@ -108,7 +109,7 @@ const AdminOverview = () => {
       const res = await adminAPI.updateRestaurantStatus(newStatus);
       setRestaurantStatus(res.data);
     } catch (err) {
-      alert("Failed to update status");
+      toast.error("Failed to update status");
     }
   };
 
