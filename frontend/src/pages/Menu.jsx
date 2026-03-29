@@ -42,8 +42,8 @@ const Menu = () => {
   const getFilteredItems = () => {
     return menuItems.filter((item) => {
       const matchesSearch = item.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) || false;
       const matchesFilter =
         filterType === "all"
           ? true
@@ -55,7 +55,7 @@ const Menu = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#1a1a1a] font-sans selection:bg-black selection:text-white flex flex-col overflow-y">
+    <div className="min-h-screen bg-[#FDFBF7] text-[#1a1a1a] font-sans selection:bg-black selection:text-white flex flex-col overflow-y-auto">
       {/* Header */}
       <div className="p-6 md:p-10 flex justify-between items-center border-b border-stone-200 bg-[#FDFBF7] sticky top-0 z-30">
         <Link

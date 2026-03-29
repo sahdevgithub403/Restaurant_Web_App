@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { Eye, EyeOff } from "lucide-react";
 
 const SignupForm = () => {
   const { signup, googleLogin } = useAuth();
@@ -11,6 +12,7 @@ const SignupForm = () => {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
@@ -37,7 +39,7 @@ const SignupForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 relative shadow-2xl animate-scale-in border-t-4 border-black bg-[#FDFBF7]">
+    <div className="w-full max-w-md p-8 relative shadow-2xl animate-fade-in border-t-4 border-black bg-[#FDFBF7]">
       <div className="text-center mb-8">
         <h2 className="font-display text-3xl font-bold mb-2">Join the Club</h2>
         <p className="font-body text-xs text-stone-500 uppercase tracking-widest">
@@ -82,16 +84,25 @@ const SignupForm = () => {
           <label className="font-body text-[10px] uppercase tracking-widest text-stone-400">
             Password
           </label>
-          <input
-            type="password"
-            required
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            className="w-full border-b border-stone-300 py-2 text-black focus:outline-none focus:border-black font-body text-sm bg-transparent"
-            placeholder="••••••••"
-          />
+          <div className="flex justify-between items-center relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              required
+              value={formData.password}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
+              className="w-full border-b border-stone-300 py-2 pr-10 text-black focus:outline-none focus:border-black font-body text-sm bg-transparent"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              className="absolute right-0 text-stone-400 hover:text-black transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
         <button
           type="submit"
