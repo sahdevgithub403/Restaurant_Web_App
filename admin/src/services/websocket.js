@@ -1,7 +1,7 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws-restaurant';
+const WS_URL = import.meta.env.VITE_WS_URL || 'https://backend-n4ou.onrender.com/ws-restaurant';
 
 class WebSocketService {
     constructor() {
